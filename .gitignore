@@ -1,0 +1,11 @@
+tests/.generated/
+tests/Benchmarks/.generated/
+.demo/
+.research/
+*.log
+.env
+.env.*
+!.env.example
+*.db
+*.db-shm
+*.db-wal
