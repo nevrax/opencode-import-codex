@@ -14,6 +14,7 @@ $steps = @(
     [pscustomobject]@{ Name = 'Module contract'; Path = Join-Path $PSScriptRoot 'Contract/Test-ModuleContract.ps1'; Arguments = @{} },
     [pscustomobject]@{ Name = 'Custom-tool output unit'; Path = Join-Path $PSScriptRoot 'Unit/Test-CodexCustomToolOutput.ps1'; Arguments = @{} },
     [pscustomobject]@{ Name = 'Bundle validation unit'; Path = Join-Path $PSScriptRoot 'Unit/Test-OpenCodeBundleValidation.ps1'; Arguments = @{} },
+    [pscustomobject]@{ Name = 'Compressed rollout unit'; Path = Join-Path $PSScriptRoot 'Unit/Test-CodexCompressedRollouts.ps1'; Arguments = @{} },
     [pscustomobject]@{ Name = 'Documentation'; Path = Join-Path $PSScriptRoot 'Documentation/Test-Documentation.ps1'; Arguments = @{} },
     [pscustomobject]@{ Name = 'Synthetic conversion integration'; Path = Join-Path $PSScriptRoot 'Integration/Test-SyntheticConversion.ps1'; Arguments = @{ Preset = $Preset; TestOpenCodeImport = $TestOpenCodeImport; KeepGenerated = $KeepGenerated } }
 )

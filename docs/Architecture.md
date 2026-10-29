@@ -32,7 +32,8 @@ The repository contains the following maintained paths:
 |       |   |-- NativeConverter.ps1
 |       |   |-- OpenCodeBundle.ps1
 |       |   |-- OpenCodeCli.ps1
-|       |   `-- Operations.ps1
+|       |   |-- Operations.ps1
+|       |   `-- RolloutReader.ps1
 |       `-- Public/
 |           |-- Convert-CodexSession.ps1
 |           |-- Get-CodexSession.ps1
@@ -147,6 +148,7 @@ flowchart LR
 | `Private/OpenCodeBundle.ps1` | Validates bundle identity, roles, parts, relationships, images, tool states, and target directory; compares generated IDs with an existing export for planning. |
 | `Private/OpenCodeCli.ps1` | Uses supported OpenCode CLI commands for global root-session inventory, export, import, verification, and deletion. |
 | `Private/Operations.ps1` | Composes selection, target resolution, output naming, conversion, planning, and import result objects. |
+| `Private/RolloutReader.ps1` | Opens plain and zstd-compressed rollout files as one text stream and closes the decompressor process safely. |
 
 ## Conversion Data Flow
 
@@ -203,7 +205,7 @@ verify that deleted IDs are absent.
 
 1. PowerShell reads `OpenCode.ImportCodex.psd1` and loads its root module.
 2. `OpenCode.ImportCodex.psm1` enables strict mode.
-3. Seven private files are dot-sourced in dependency order.
+3. Eight private files are dot-sourced in dependency order.
 4. Eight public files are dot-sourced.
 5. `Export-ModuleMember` publishes the same eight functions declared by the
    manifest.

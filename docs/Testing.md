@@ -64,6 +64,7 @@ PowerShell test files use approved `Verb-Noun` names with PascalCase components.
 | `tests/Publication/Test-Publication.ps1` | Private-data, generated-artifact, credential, path, ID, and legacy-layout audit. |
 | `tests/Unit/Test-CodexCustomToolOutput.ps1` | Conservative custom-tool output-envelope decoding. |
 | `tests/Unit/Test-OpenCodeBundleValidation.ps1` | Bundle counts and schema/relationship rejection behavior. |
+| `tests/Unit/Test-CodexCompressedRollouts.ps1` | Compressed rollout discovery, zstd-backed conversion, and decompressor error behavior. |
 | `tests/Support/New-SyntheticCodexData.ps1` | Seeded volume and shape generator. |
 | `tests/Fixtures/ComplexLegacy/Codex/` | Small, committed, feature-rich legacy rollout fixture. |
 

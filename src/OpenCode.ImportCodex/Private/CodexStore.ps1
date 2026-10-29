@@ -15,10 +15,8 @@ function Resolve-CodexDataRoot {
 
 function Read-SharedFirstLine {
     param([Parameter(Mandatory)][string]$Path)
-    $share = [System.IO.FileShare]::ReadWrite -bor [System.IO.FileShare]::Delete
-    $stream = New-Object System.IO.FileStream($Path, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, $share)
-    $reader = New-Object System.IO.StreamReader($stream, [System.Text.Encoding]::UTF8, $true)
-    try { $reader.ReadLine() } finally { $reader.Dispose(); $stream.Dispose() }
+    $source = Open-CodexRolloutReader -Path $Path
+    try { $source.Reader.ReadLine() } finally { Close-CodexRolloutReader -Source $source -AllowEarlyExit }
 }
 
 function Get-CodexSessionTitleMap {
@@ -39,35 +37,48 @@ function Get-CodexSessionTitleMap {
 function Get-CodexSessionInventory {
     param([Parameter(Mandatory)][string]$CodexDataRoot)
     $sessionsRoot = Join-Path $CodexDataRoot 'sessions'
-    if (-not (Test-Path -LiteralPath $sessionsRoot -PathType Container)) { return @() }
+    $archivedRoot = Join-Path $CodexDataRoot 'archived_sessions'
+    if (-not (Test-Path -LiteralPath $sessionsRoot -PathType Container) -and -not (Test-Path -LiteralPath $archivedRoot -PathType Container)) { return @() }
     $titles = Get-CodexSessionTitleMap $CodexDataRoot
     $sessions = New-Object 'System.Collections.Generic.List[object]'
-    foreach ($file in Get-ChildItem -LiteralPath $sessionsRoot -Filter 'rollout-*.jsonl' -File -Recurse) {
-        try {
-            $record = (Read-SharedFirstLine $file.FullName) | ConvertFrom-Json
-            if ($record.type -ne 'session_meta') { continue }
-            $meta = $record.payload
-            $id = if ($meta.id) { [string]$meta.id } else { [string]$meta.session_id }
-            if (-not $id) { continue }
-            try { Confirm-CodexSessionId $id } catch {
-                Write-Warning "Ignored rollout with an unsafe session ID: $($file.FullName)"
-                continue
+    foreach ($root in @($sessionsRoot, $archivedRoot)) {
+        if (-not (Test-Path -LiteralPath $root -PathType Container)) { continue }
+        $rolloutFiles = @(
+            Get-ChildItem -LiteralPath $root -Filter 'rollout-*.jsonl' -File -Recurse
+            Get-ChildItem -LiteralPath $root -Filter 'rollout-*.jsonl.zst' -File -Recurse
+        ) | Sort-Object -Property FullName -Unique
+        foreach ($file in $rolloutFiles) {
+            try {
+                $record = (Read-SharedFirstLine $file.FullName) | ConvertFrom-Json
+                if ($record.type -ne 'session_meta') { continue }
+                $meta = $record.payload
+                $id = if ($meta.id) { [string]$meta.id } else { [string]$meta.session_id }
+                if (-not $id) { continue }
+                try { Confirm-CodexSessionId $id } catch {
+                    Write-Warning "Ignored rollout with an unsafe session ID: $($file.FullName)"
+                    continue
+                }
+                $title = if ($titles.ContainsKey($id)) { $titles[$id] } else { '' }
+                $session = [pscustomobject]@{
+                    Id = $id
+                    Started = [datetimeoffset]$meta.timestamp
+                    Title = $title
+                    Directory = [string]$meta.cwd
+                    SourcePath = $file.FullName
+                }
+                $session.PSObject.TypeNames.Insert(0, 'OpenCode.ImportCodex.CodexSession')
+                $sessions.Add($session) | Out-Null
+            } catch {
+                Write-Warning "Could not read Codex metadata from $($file.FullName): $($_.Exception.Message)"
             }
-            $title = if ($titles.ContainsKey($id)) { $titles[$id] } else { '' }
-            $session = [pscustomobject]@{
-                Id = $id
-                Started = [datetimeoffset]$meta.timestamp
-                Title = $title
-                Directory = [string]$meta.cwd
-                SourcePath = $file.FullName
-            }
-            $session.PSObject.TypeNames.Insert(0, 'OpenCode.ImportCodex.CodexSession')
-            $sessions.Add($session) | Out-Null
-        } catch {
-            Write-Warning "Could not read Codex metadata from $($file.FullName): $($_.Exception.Message)"
         }
     }
-    @($sessions | Sort-Object Started -Descending)
+    $unique = @{}
+    foreach ($session in @($sessions | Sort-Object Started -Descending)) {
+        if ($unique.ContainsKey($session.Id)) { continue }
+        $unique[$session.Id] = $session
+    }
+    @($unique.Values | Sort-Object Started -Descending)
 }
 
 function ConvertFrom-CodexSessionReference {
@@ -106,7 +117,7 @@ function Resolve-CodexInputSession {
     $root = if ($CodexDataRoot) { Resolve-CodexDataRoot $CodexDataRoot } else { '' }
     if (-not $root) {
         $directory = (Get-Item -LiteralPath $sourcePath).Directory
-        while ($directory -and $directory.Name -ne 'sessions') { $directory = $directory.Parent }
+        while ($directory -and $directory.Name -ne 'sessions' -and $directory.Name -ne 'archived_sessions') { $directory = $directory.Parent }
         if (-not $directory -or -not $directory.Parent) { throw "Could not infer the Codex data root from SourcePath: $sourcePath" }
         $root = $directory.Parent.FullName
     }

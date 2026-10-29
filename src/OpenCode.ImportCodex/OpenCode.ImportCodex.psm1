@@ -2,6 +2,7 @@ Set-StrictMode -Version Latest
 
 $privateFiles = @(
     'Private/Common.ps1'
+    'Private/RolloutReader.ps1'
     'Private/CodexStore.ps1'
     'Private/CodexTypedItems.ps1'
     'Private/NativeConverter.ps1'

@@ -35,7 +35,7 @@ function Test-CodexOpenCodeEnvironment {
     }
     $diagnostic = [pscustomobject]@{
         Platform = $platform; CodexDataRoot = $root; CodexSessionsPath = Join-Path $root 'sessions'; CodexSessionsAvailable = Test-Path -LiteralPath (Join-Path $root 'sessions') -PathType Container
-        CodexCli = $codexCli; OpenCodeCli = $openCodeCli
+        CodexCli = $codexCli; OpenCodeCli = $openCodeCli; ZstdCli = Get-ZstdCommandInfo
         CodexDesktop = @(Find-DesktopApplication '(^|\s)Codex(\s|$)|OpenAI.*Codex' @($codexCandidates))
         OpenCodeDesktop = @(Find-DesktopApplication '(^|\s)OpenCode(\s|$)|OpenCode Desktop' @($openCodeCandidates))
     }

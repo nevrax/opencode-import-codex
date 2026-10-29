@@ -52,6 +52,11 @@ You need:
 - A local Codex session store.
 - The OpenCode CLI for planning and importing. Conversion alone does not require
   OpenCode.
+- The `zstd` decompressor command when the Codex session store uses compressed
+  (`*.jsonl.zst`) rollout files. The module locates `zstd` on `PATH`, looks next to
+  the Codex CLI, and honors the `CODEX_IMPORT_ZSTD` environment variable for an
+  explicit executable or command name. Sessions that require compression fail with
+  an actionable error when no decompressor is available.
 
 Download or clone the repository, open PowerShell in its root directory, and
 load the module:

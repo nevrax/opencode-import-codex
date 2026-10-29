@@ -231,6 +231,11 @@ with `FileAccess.Read` and shared read/write/delete access so an active producer
 does not have to close the file. The module never archives, renames, deletes, or
 writes Codex source files or databases.
 
+Compressed rollouts (`*.jsonl.zst`) are opened through the `zstd` decompressor
+command instead of the filesystem reader. The module locates the decompressor,
+honors `CODEX_IMPORT_ZSTD`, and fails with an actionable error when a compressed
+rollout cannot be read.
+
 Reading can update filesystem access-time metadata where the operating system has
 enabled it. The content, creation time, and last-write time are not intentionally
 changed. Output is rejected when it is lexically equal to or under the Codex data

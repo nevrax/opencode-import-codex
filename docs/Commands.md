@@ -255,8 +255,9 @@ removed targets are returned.
 ## Test-CodexOpenCodeEnvironment
 
 Returns best-effort environment diagnostics. It checks application command
-discovery and versions, candidate desktop locations, and Codex session directory
-availability. It does not convert, import, install, or download anything.
+discovery and versions, candidate desktop locations, the Codex session directory
+availability, and the `zstd` decompressor required for compressed rollouts. It
+does not convert, import, install, or download anything.
 
 Syntax:
 
@@ -279,6 +280,7 @@ Output type: `OpenCode.ImportCodex.EnvironmentDiagnostic`.
 | `CodexSessionsAvailable` | `Boolean` | Whether that child is an existing directory. |
 | `CodexCli` | `PSCustomObject` | `Installed` (`Boolean`), `Path` (`String`), and `Version` (`String`). |
 | `OpenCodeCli` | `PSCustomObject` | `Installed` (`Boolean`), `Path` (`String`), and `Version` (`String`). |
+| `ZstdCli` | `PSCustomObject` | `Installed` (`Boolean`), `Path` (`String`), and `Version` (`String`). Reports whether a `zstd` decompressor is available for compressed rollouts; honors the `CODEX_IMPORT_ZSTD` override. |
 | `CodexDesktop` | `Object[]` of `String` | Existing candidate, registry, package, or launcher entries. |
 | `OpenCodeDesktop` | `Object[]` of `String` | Existing candidate, registry, package, or launcher entries. |
 

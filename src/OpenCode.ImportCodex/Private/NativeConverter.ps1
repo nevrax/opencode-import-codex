@@ -217,16 +217,20 @@ function Invoke-NativeCodexConversion {
     $records = New-Object 'System.Collections.Generic.List[object]'; $startedAt = ''; $imageOrdinal = 0; $historyMode = 'legacy'
     $activeCodeMode = $null; $completedCodeMode = $null; $activeCompactionRecords = @(); $seenLegacyEvents = New-Object 'System.Collections.Generic.HashSet[string]'
     $seenTypedItems = New-Object 'System.Collections.Generic.HashSet[string]'
-    $share = [System.IO.FileShare]::ReadWrite -bor [System.IO.FileShare]::Delete
-    $sourceStream = New-Object System.IO.FileStream($SourcePath, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, $share)
-    $sourceReader = New-Object System.IO.StreamReader($sourceStream, [System.Text.Encoding]::UTF8, $true)
-    $sourceLength = [math]::Max([int64]1, $sourceStream.Length); $sourceLineCount = 0
+    $source = Open-CodexRolloutReader -Path $SourcePath
+    $sourceReader = $source.Reader
+    $sourceLength = [math]::Max([int64]1, [int64]$source.Length); $sourceLineCount = 0
     try {
         while (-not $sourceReader.EndOfStream) {
         $line = $sourceReader.ReadLine(); $sourceLineCount++
         if (($sourceLineCount % 100) -eq 0) {
-            $percent = [math]::Min(100, [int](($sourceStream.Position * 100) / $sourceLength))
-            Write-Progress -Id $ProgressId -Activity $ProgressActivity -Status "Reading and converting source: $sourceLineCount records" -PercentComplete $percent
+            $status = "Reading and converting source: $sourceLineCount records"
+            if ($source.Compressed) {
+                Write-Progress -Id $ProgressId -Activity $ProgressActivity -Status $status
+            } else {
+                $percent = [math]::Min(100, [int](($source.Stream.Position * 100) / $sourceLength))
+                Write-Progress -Id $ProgressId -Activity $ProgressActivity -Status $status -PercentComplete $percent
+            }
         }
         if ([string]::IsNullOrWhiteSpace($line)) { continue }; try { $row = $line | ConvertFrom-Json } catch { continue }
         if ($row.type -eq 'session_meta') {
@@ -331,7 +335,7 @@ function Invoke-NativeCodexConversion {
         }
         }
         Write-Progress -Id $ProgressId -Activity $ProgressActivity -Status "Converted $sourceLineCount source records" -PercentComplete 100
-    } finally { $sourceReader.Dispose(); $sourceStream.Dispose() }
+    } finally { Close-CodexRolloutReader -Source $source }
     if (-not $records.Count) { throw 'The Codex session contains no importable records.' }
 
     $toolResultsByCallId = @{}
